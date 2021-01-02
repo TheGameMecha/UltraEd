@@ -32,7 +32,7 @@ namespace UltraEd
         bool Move(const D3DXVECTOR3 &position) { return Dirty([&] { m_position += position; }, &m_position); }
         bool Scale(const D3DXVECTOR3 &position) { return Dirty([&] { m_scale += position; }, &m_scale); }
         bool Rotate(const float &angle, const D3DXVECTOR3 &dir);
-        const D3DXVECTOR3 &GetPosition() { return m_position; }
+        const D3DXVECTOR3 GetPosition() { return GetParent() != nullptr ? GetParent()->GetPosition() + m_position : m_position; }
         bool SetPosition(const D3DXVECTOR3 &position) { return Dirty([&] { m_position = position; }, &m_position); }
         const D3DXVECTOR3 &GetEulerAngles();
         bool SetRotation(const D3DXVECTOR3 &eulerAngles);
@@ -49,6 +49,10 @@ namespace UltraEd
         Collider *GetCollider() { return m_collider.get(); }
         void SetCollider(Collider *collider) { Dirty([&] { m_collider = std::shared_ptr<Collider>(collider); }, &m_collider); }
         bool HasCollider() { return GetCollider() != NULL; }
+        Actor *GetParent() { return m_parent; }
+        void SetParent(Actor *actor);
+        void UnParent();
+        const std::map<boost::uuids::uuid, Actor *> &GetChildren() { return m_children; }
         nlohmann::json Save();
         void Load(const nlohmann::json &root);
 
@@ -71,6 +75,8 @@ namespace UltraEd
         bool IntersectTriangle(const D3DXVECTOR3 &orig, const D3DXVECTOR3 &dir,
             const D3DXVECTOR3 &v0, const D3DXVECTOR3 &v1, const D3DXVECTOR3 &v2, float *dist);
         std::shared_ptr<Collider> m_collider;
+        Actor *m_parent;
+        std::map<boost::uuids::uuid, Actor *> m_children;
     };
 }
 

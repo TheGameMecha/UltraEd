@@ -201,7 +201,7 @@ namespace UltraEd
         ImFontConfig config;
         config.MergeMode = true;
         const ImWchar icon_ranges[] = { ICON_MIN_FK, ICON_MAX_FK, 0 };
-        
+
         io.Fonts->AddFontFromMemoryCompressedTTF(fk_compressed_data, fk_compressed_size, fontSize, &config, icon_ranges);
         io.Fonts->Build();
     }
@@ -760,23 +760,64 @@ namespace UltraEd
     {
         if (ImGui::Begin(ICON_FK_TH_LIST" Scene Graph", 0, ImGuiWindowFlags_HorizontalScrollbar))
         {
-            ImGuiTreeNodeFlags baseFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick
-                | ImGuiTreeNodeFlags_SpanAvailWidth;
-
-            auto actors = m_scene->GetActors();
-            for (int i = 0; i < actors.size(); i++)
+            for (const auto actor : m_scene->GetActors())
             {
-                ImGuiTreeNodeFlags leafFlags = baseFlags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-                if (m_scene->IsActorSelected(actors[i]->GetId()))
-                    leafFlags |= ImGuiTreeNodeFlags_Selected;
+                if (actor->GetParent() != nullptr) 
+                    continue;
 
-                ImGui::TreeNodeEx((void *)(intptr_t)i, leafFlags, actors[i]->GetName().c_str());
-                if (ImGui::IsItemClicked())
-                    m_scene->SelectActorById(actors[i]->GetId(), !IO().KeyShift);
+                RenderTreeNode(actor);
             }
         }
 
         ImGui::End();
+    }
+
+    void Gui::RenderTreeNode(Actor *actor)
+    {
+        ImGuiTreeNodeFlags leafFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth | 
+            ImGuiTreeNodeFlags_NoTreePushOnOpen;
+
+        if (m_scene->IsActorSelected(actor->GetId()))
+            leafFlags |= ImGuiTreeNodeFlags_Selected;
+
+        if (actor->GetChildren().empty())
+            leafFlags |= ImGuiTreeNodeFlags_Leaf;
+
+        bool isOpen = ImGui::TreeNodeEx(&actor->GetId(), leafFlags, actor->GetName().c_str());
+
+        if (ImGui::IsItemClicked())
+            m_scene->SelectActorById(actor->GetId(), !IO().KeyShift);
+
+        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+        {
+            ImGui::SetDragDropPayload("ACTOR_NODE_ID", &actor->GetId(), sizeof(boost::uuids::uuid));
+            ImGui::EndDragDropSource();
+        }
+
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ACTOR_NODE_ID"))
+            {
+                auto selectedActor = m_scene->GetActor(*(boost::uuids::uuid *)payload->Data);
+                if (selectedActor != nullptr)
+                {
+                    selectedActor->SetParent(actor);
+                }
+            }
+
+            ImGui::EndDragDropTarget();
+        }
+
+        if (!isOpen) return;
+
+        ImGui::TreePush();
+
+        for (const auto child : actor->GetChildren())
+        {
+            RenderTreeNode(child.second);
+        }
+
+        ImGui::TreePop();
     }
 
     void Gui::SceneView()

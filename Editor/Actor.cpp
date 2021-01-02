@@ -21,7 +21,9 @@ namespace UltraEd
         m_worldRot(),
         m_eulerAngles(0, 0, 0),
         m_script(),
-        m_collider()
+        m_collider(),
+        m_parent(),
+        m_children()
     {
         ResetId();
         m_script = std::string("void $start()\n{\n\n}\n\nvoid $update()\n{\n\n}\n\nvoid $input(NUContData gamepads[4])\n{\n\n}");
@@ -124,7 +126,14 @@ namespace UltraEd
         D3DXMATRIX scale;
         D3DXMatrixScaling(&scale, m_scale.x, m_scale.y, m_scale.z);
 
-        return scale * m_worldRot * m_localRot * translation;
+        D3DXMATRIX mat = scale * m_worldRot * m_localRot * translation;
+        
+        if (GetParent() != nullptr)
+        {
+            D3DXMatrixMultiply(&mat, &mat, &GetParent()->GetMatrix());
+        }
+
+        return mat;
     }
 
     bool Actor::Pick(const D3DXVECTOR3 &orig, const D3DXVECTOR3 &dir, float *dist)
@@ -184,6 +193,32 @@ namespace UltraEd
         *dist = D3DXVec3Dot(&edge2, &qvec) * (1.0f / det);
 
         return true;
+    }
+
+    void Actor::SetParent(Actor *actor) 
+    {
+        UnParent();
+
+        if (actor == nullptr) return;
+
+        // Update position based off of new origin.
+        m_position = m_position - actor->GetPosition();
+
+        actor->m_children[GetId()] = this;
+
+        Dirty([&] { m_parent = actor; }, &m_parent);
+    }
+
+    void Actor::UnParent()
+    {
+        if (m_parent == nullptr) return;
+
+        // Update position based off of previous origin.
+        m_position = m_position + m_parent->GetPosition();
+
+        m_parent->m_children.erase(GetId());
+
+        Dirty([&] { m_parent = nullptr; }, &m_parent);
     }
 
     nlohmann::json Actor::Save()
