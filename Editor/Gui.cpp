@@ -762,7 +762,7 @@ namespace UltraEd
         {
             for (const auto actor : m_scene->GetActors())
             {
-                if (actor->GetParent() != nullptr) 
+                if (actor->GetParent() != nullptr)
                     continue;
 
                 RenderTreeNode(actor);
@@ -774,7 +774,7 @@ namespace UltraEd
 
     void Gui::RenderTreeNode(Actor *actor)
     {
-        ImGuiTreeNodeFlags leafFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth | 
+        ImGuiTreeNodeFlags leafFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth |
             ImGuiTreeNodeFlags_NoTreePushOnOpen;
 
         if (m_scene->IsActorSelected(actor->GetId()))
@@ -783,10 +783,17 @@ namespace UltraEd
         if (actor->GetChildren().empty())
             leafFlags |= ImGuiTreeNodeFlags_Leaf;
 
-        bool isOpen = ImGui::TreeNodeEx(&actor->GetId(), leafFlags, actor->GetName().c_str());
+        const bool isOpen = ImGui::TreeNodeEx(&actor->GetId(), leafFlags, actor->GetName().c_str());
 
-        if (ImGui::IsItemClicked())
+        if (ImGui::IsItemClicked(ImGuiMouseButton_Left) || ImGui::IsItemClicked(ImGuiMouseButton_Right))
+        {
             m_scene->SelectActorById(actor->GetId(), !IO().KeyShift);
+            
+            if (IO().MouseClicked[ImGuiMouseButton_Right])
+            {
+                OpenContextMenu(actor);
+            }
+        }
 
         if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
         {
@@ -798,7 +805,7 @@ namespace UltraEd
         {
             if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ACTOR_NODE_ID"))
             {
-                auto selectedActor = m_scene->GetActor(*(boost::uuids::uuid *)payload->Data);
+                const auto selectedActor = m_scene->GetActor(*(boost::uuids::uuid *)payload->Data);
                 if (selectedActor != nullptr)
                 {
                     selectedActor->SetParent(actor);
@@ -1158,6 +1165,14 @@ namespace UltraEd
             if (ImGui::MenuItem("Duplicate"))
             {
                 m_scene->Duplicate();
+            }
+
+            if (m_selectedActor != nullptr && m_selectedActor->GetParent() != nullptr)
+            {
+                if (ImGui::MenuItem("Unparent"))
+                {
+                    m_selectedActor->UnParent();
+                }
             }
 
             ImGui::EndPopup();

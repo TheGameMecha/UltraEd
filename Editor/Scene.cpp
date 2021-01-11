@@ -313,14 +313,12 @@ namespace UltraEd
         const float mouseSpeedModifier = 0.55f;
 
         Actor *selectedActor = NULL;
-        if (m_gui->IO().MouseReleased[1] &&
-            m_gui->IO().MouseDownDurationPrev[1] < 0.2f &&
-            Pick(mousePos, true, &selectedActor))
+        if (m_gui->IO().MouseReleased[1] && m_gui->IO().MouseDownDurationPrev[1] < 0.2f && Pick(mousePos, true, &selectedActor))
         {
             m_gui->OpenContextMenu(selectedActor);
         }
 
-        if (m_gui->IO().MouseClicked[0]) Pick(mousePos);
+        if (m_gui->IO().MouseClicked[ImGuiMouseButton_Left]) Pick(mousePos);
         if (m_gui->IO().KeyCtrl && ImGui::IsKeyPressed('A', false)) SelectAll();
         if (m_gui->IO().KeyCtrl && ImGui::IsKeyPressed('D', false)) Duplicate();
         if (m_gui->IO().KeyCtrl && ImGui::IsKeyPressed('Z', false)) m_auditor.Undo();
