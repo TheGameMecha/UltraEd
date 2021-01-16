@@ -189,7 +189,7 @@ namespace UltraEd
 
             if (!m_worldSpaceToggled)
             {
-                mat = currentActor->GetRotationMatrix();
+                mat = currentActor->GetRotationMatrix(true);
             }
 
             // Keep gizmo in-sync with the actor's rotation.
@@ -198,7 +198,7 @@ namespace UltraEd
                 m_models[i].SetLocalRotationMatrix(mat);
             }
 
-            SetPosition(currentActor->GetPosition());
+            SetPosition(currentActor->GetPosition(true));
         }
     }
 
@@ -207,7 +207,7 @@ namespace UltraEd
         bool changeDetected = false;
         D3DXVECTOR3 targetDir = D3DXVECTOR3(0, 0, 0);
         D3DXVECTOR3 v0, v1, v2, intersectPoint;
-        D3DXVECTOR3 look = selectedActor->GetPosition() - view->GetPosition();
+        D3DXVECTOR3 look = selectedActor->GetPosition(true) - view->GetPosition();
         D3DXVec3Normalize(&look, &look);
 
         // Determine orientation for plane to produce depending on selected axis.
@@ -218,7 +218,7 @@ namespace UltraEd
             D3DXVec3Cross(&up, &right, &look);
             D3DXVec3Cross(&look, &right, &up);
 
-            v0 = selectedActor->GetPosition();
+            v0 = selectedActor->GetPosition(true);
             v1 = v0 + right;
             v2 = v0 + up;
 
@@ -231,7 +231,7 @@ namespace UltraEd
             D3DXVec3Cross(&right, &up, &look);
             D3DXVec3Cross(&look, &up, &right);
 
-            v0 = selectedActor->GetPosition();
+            v0 = selectedActor->GetPosition(true);
             v1 = v0 + right;
             v2 = v0 + up;
 
@@ -244,11 +244,21 @@ namespace UltraEd
             D3DXVec3Cross(&up, &forward, &look);
             D3DXVec3Cross(&look, &forward, &up);
 
-            v0 = selectedActor->GetPosition();
+            v0 = selectedActor->GetPosition(true);
             v1 = v0 + forward;
             v2 = v0 + up;
 
             targetDir = forward;
+        }
+
+        D3DXVECTOR3 origTargetDir = targetDir;
+
+        // Adjust the target direction to compensate for any parent rotations.
+        if (selectedActor->GetParent() != nullptr)
+        {
+            D3DXMATRIX inverse;
+            D3DXMatrixInverse(&inverse, NULL, &selectedActor->GetParent()->GetRotationMatrix(true));
+            D3DXVec3TransformCoord(&targetDir, &targetDir, &inverse);
         }
 
         D3DXPLANE testPlane;
@@ -270,7 +280,7 @@ namespace UltraEd
             bool shouldSnap = fabsf((moveDist > m_snapSize ? m_snapSize : moveDist) - m_snapSize) < epsilon;
 
             // Clamp the dot product between -1, 1 to not cause a undefined result.
-            FLOAT dot = D3DXVec3Dot(&targetDir, &normMouseDir);
+            FLOAT dot = D3DXVec3Dot(&origTargetDir, &normMouseDir);
             dot = dot < -1.0f ? -1.0f : dot > 1.0f ? 1.0f : dot;
             FLOAT angle = acosf(dot);
 
@@ -282,7 +292,7 @@ namespace UltraEd
             {
                 if (shouldSnap && m_snapToGridToggled)
                 {
-                    D3DXVECTOR3 newPos = currentActor->GetPosition();
+                    D3DXVECTOR3 newPos = currentActor->GetPosition(true);
                     newPos.x = Util::Snap(newPos.x * (1 / m_snapSize)) / (1 / m_snapSize);
                     newPos.y = Util::Snap(newPos.y * (1 / m_snapSize)) / (1 / m_snapSize);
                     newPos.z = Util::Snap(newPos.z * (1 / m_snapSize)) / (1 / m_snapSize);

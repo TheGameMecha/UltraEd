@@ -27,12 +27,12 @@ namespace UltraEd
         bool SetName(std::string name) { return Dirty([&] {  m_name = name.empty() ? "Actor" : name; }, &m_name); }
         const ActorType &GetType() { return m_type; }
         D3DXMATRIX GetMatrix();
-        const D3DXMATRIX &GetRotationMatrix() { return m_worldRot; }
+        const D3DXMATRIX GetRotationMatrix(bool worldSpace = false);
         void SetLocalRotationMatrix(const D3DXMATRIX &mat) { m_localRot = mat; }
         bool Move(const D3DXVECTOR3 &position) { return Dirty([&] { m_position += position; }, &m_position); }
         bool Scale(const D3DXVECTOR3 &position) { return Dirty([&] { m_scale += position; }, &m_scale); }
         bool Rotate(const float &angle, const D3DXVECTOR3 &dir);
-        const D3DXVECTOR3 GetPosition() { return GetParent() != nullptr ? GetParent()->GetPosition() + m_position : m_position; }
+        const D3DXVECTOR3 GetPosition(bool worldSpace = false);
         bool SetPosition(const D3DXVECTOR3 &position) { return Dirty([&] { m_position = position; }, &m_position); }
         const D3DXVECTOR3 &GetEulerAngles();
         bool SetRotation(const D3DXVECTOR3 &eulerAngles);

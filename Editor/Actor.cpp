@@ -74,7 +74,7 @@ namespace UltraEd
         m_eulerAngles = eulerAngles;
 
         return Dirty([&]() {
-            D3DXMatrixRotationYawPitchRoll(&m_worldRot, D3DXToRadian(eulerAngles.y), 
+            D3DXMatrixRotationYawPitchRoll(&m_worldRot, D3DXToRadian(eulerAngles.y),
                 D3DXToRadian(eulerAngles.x), D3DXToRadian(eulerAngles.z));
         }, &m_worldRot);
     }
@@ -82,21 +82,21 @@ namespace UltraEd
     D3DXVECTOR3 Actor::GetRight()
     {
         D3DXVECTOR3 right = D3DXVECTOR3(1, 0, 0);
-        D3DXVec3TransformCoord(&right, &right, &GetRotationMatrix());
+        D3DXVec3TransformCoord(&right, &right, &GetRotationMatrix(true));
         return right;
     }
 
     D3DXVECTOR3 Actor::GetForward()
     {
         D3DXVECTOR3 forward = D3DXVECTOR3(0, 0, 1);
-        D3DXVec3TransformCoord(&forward, &forward, &GetRotationMatrix());
+        D3DXVec3TransformCoord(&forward, &forward, &GetRotationMatrix(true));
         return forward;
     }
 
     D3DXVECTOR3 Actor::GetUp()
     {
         D3DXVECTOR3 up = D3DXVECTOR3(0, 1, 0);
-        D3DXVec3TransformCoord(&up, &up, &GetRotationMatrix());
+        D3DXVec3TransformCoord(&up, &up, &GetRotationMatrix(true));
         return up;
     }
 
@@ -118,6 +118,18 @@ namespace UltraEd
         return Dirty([&] { m_worldRot *= newWorld; }, &m_worldRot);
     }
 
+    const D3DXVECTOR3 Actor::GetPosition(bool worldSpace)
+    {
+        if (worldSpace && GetParent() != nullptr)
+        {
+            D3DXVECTOR3 newPosition;
+            D3DXVec3TransformCoord(&newPosition, &m_position, &GetParent()->GetRotationMatrix(true));
+            return GetParent()->GetPosition(true) + newPosition;
+        }
+
+        return m_position;
+    }
+
     D3DXMATRIX Actor::GetMatrix()
     {
         D3DXMATRIX translation;
@@ -127,13 +139,23 @@ namespace UltraEd
         D3DXMatrixScaling(&scale, m_scale.x, m_scale.y, m_scale.z);
 
         D3DXMATRIX mat = scale * m_worldRot * m_localRot * translation;
-        
+
         if (GetParent() != nullptr)
         {
-            D3DXMatrixMultiply(&mat, &mat, &GetParent()->GetMatrix());
+            return mat * GetParent()->GetMatrix();
         }
 
         return mat;
+    }
+
+    const D3DXMATRIX Actor::GetRotationMatrix(bool worldSpace) 
+    {
+        if (worldSpace && GetParent() != nullptr)
+        {
+            return m_worldRot * GetParent()->GetRotationMatrix(true);
+        }
+
+        return m_worldRot;
     }
 
     bool Actor::Pick(const D3DXVECTOR3 &orig, const D3DXVECTOR3 &dir, float *dist)
@@ -195,14 +217,14 @@ namespace UltraEd
         return true;
     }
 
-    void Actor::SetParent(Actor *actor) 
+    void Actor::SetParent(Actor *actor)
     {
         UnParent();
 
         if (actor == nullptr) return;
 
         // Update position based off of new origin.
-        m_position = m_position - actor->GetPosition();
+        m_position = m_position - actor->GetPosition(true);
 
         actor->m_children[GetId()] = this;
 
@@ -214,7 +236,7 @@ namespace UltraEd
         if (m_parent == nullptr) return;
 
         // Update position based off of previous origin.
-        m_position = m_position + m_parent->GetPosition();
+        m_position = m_position + m_parent->GetPosition(true);
 
         m_parent->m_children.erase(GetId());
 
