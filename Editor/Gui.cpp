@@ -910,7 +910,7 @@ namespace UltraEd
             // Show the properties of the last selected actor.
             targetActor = actors[actors.size() - 1];
             sprintf(name, targetActor->GetName().c_str());
-            Util::ToFloat3(targetActor->GetPosition(), position);
+            Util::ToFloat3(targetActor->GetPosition(false), position);
             Util::ToFloat3(targetActor->GetEulerAngles(), rotation);
             Util::ToFloat3(targetActor->GetScale(), scale);
         }
@@ -968,7 +968,7 @@ namespace UltraEd
 
             if (tempPos != D3DXVECTOR3(position))
             {
-                auto curPos = actors[i]->GetPosition();
+                auto curPos = actors[i]->GetPosition(false);
                 m_scene->m_auditor.ChangeActor("Position Set", actors[i]->GetId(), groupId);
                 actors[i]->SetPosition(D3DXVECTOR3(
                     tempPos.x != position[0] ? position[0] : curPos.x,

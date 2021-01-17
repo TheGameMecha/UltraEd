@@ -82,21 +82,21 @@ namespace UltraEd
     D3DXVECTOR3 Actor::GetRight()
     {
         D3DXVECTOR3 right = D3DXVECTOR3(1, 0, 0);
-        D3DXVec3TransformCoord(&right, &right, &GetRotationMatrix(true));
+        D3DXVec3TransformCoord(&right, &right, &GetRotationMatrix());
         return right;
     }
 
     D3DXVECTOR3 Actor::GetForward()
     {
         D3DXVECTOR3 forward = D3DXVECTOR3(0, 0, 1);
-        D3DXVec3TransformCoord(&forward, &forward, &GetRotationMatrix(true));
+        D3DXVec3TransformCoord(&forward, &forward, &GetRotationMatrix());
         return forward;
     }
 
     D3DXVECTOR3 Actor::GetUp()
     {
         D3DXVECTOR3 up = D3DXVECTOR3(0, 1, 0);
-        D3DXVec3TransformCoord(&up, &up, &GetRotationMatrix(true));
+        D3DXVec3TransformCoord(&up, &up, &GetRotationMatrix());
         return up;
     }
 
@@ -123,8 +123,8 @@ namespace UltraEd
         if (worldSpace && GetParent() != nullptr)
         {
             D3DXVECTOR3 newPosition;
-            D3DXVec3TransformCoord(&newPosition, &m_position, &GetParent()->GetRotationMatrix(true));
-            return GetParent()->GetPosition(true) + newPosition;
+            D3DXVec3TransformCoord(&newPosition, &m_position, &GetParent()->GetRotationMatrix());
+            return GetParent()->GetPosition() + newPosition;
         }
 
         return m_position;
@@ -152,7 +152,7 @@ namespace UltraEd
     {
         if (worldSpace && GetParent() != nullptr)
         {
-            return m_worldRot * GetParent()->GetRotationMatrix(true);
+            return m_worldRot * GetParent()->GetRotationMatrix();
         }
 
         return m_worldRot;
@@ -224,7 +224,7 @@ namespace UltraEd
         if (actor == nullptr) return;
 
         // Update position based off of new origin.
-        m_position = m_position - actor->GetPosition(true);
+        m_position = m_position - actor->GetPosition();
 
         actor->m_children[GetId()] = this;
 
@@ -236,7 +236,7 @@ namespace UltraEd
         if (m_parent == nullptr) return;
 
         // Update position based off of previous origin.
-        m_position = m_position + m_parent->GetPosition(true);
+        m_position = m_position + m_parent->GetPosition();
 
         m_parent->m_children.erase(GetId());
 
