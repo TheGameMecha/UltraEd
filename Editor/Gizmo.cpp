@@ -257,7 +257,7 @@ namespace UltraEd
         if (selectedActor->GetParent() != nullptr)
         {
             D3DXMATRIX inverse;
-            D3DXMatrixInverse(&inverse, NULL, &selectedActor->GetParent()->GetRotationMatrix());
+            D3DXMatrixInverse(&inverse, NULL, &(selectedActor->GetParent()->GetScaleMatrix() * selectedActor->GetParent()->GetRotationMatrix()));
             D3DXVec3TransformCoord(&targetDir, &targetDir, &inverse);
         }
 

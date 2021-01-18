@@ -79,6 +79,24 @@ namespace UltraEd
         }, &m_worldRot);
     }
 
+    const D3DXVECTOR3 Actor::GetScale() 
+    {
+        return m_scale;
+    }
+
+    const D3DXMATRIX Actor::GetScaleMatrix(bool worldSpace)
+    {
+        D3DXMATRIX scale;
+        D3DXMatrixScaling(&scale, m_scale.x, m_scale.y, m_scale.z);
+
+        if (worldSpace && GetParent() != nullptr)
+        {
+            return scale * GetParent()->GetScaleMatrix();
+        }
+
+        return scale;
+    }
+
     D3DXVECTOR3 Actor::GetRight()
     {
         D3DXVECTOR3 right = D3DXVECTOR3(1, 0, 0);
@@ -103,7 +121,7 @@ namespace UltraEd
     void Actor::GetAxisAngle(D3DXVECTOR3 *axis, float *angle)
     {
         D3DXQUATERNION quat;
-        D3DXQuaternionRotationMatrix(&quat, &m_worldRot);
+        D3DXQuaternionRotationMatrix(&quat, &GetRotationMatrix());
         D3DXQuaternionToAxisAngle(&quat, axis, angle);
     }
 
@@ -123,7 +141,7 @@ namespace UltraEd
         if (worldSpace && GetParent() != nullptr)
         {
             D3DXVECTOR3 newPosition;
-            D3DXVec3TransformCoord(&newPosition, &m_position, &GetParent()->GetRotationMatrix());
+            D3DXVec3TransformCoord(&newPosition, &m_position, &(GetParent()->GetScaleMatrix() * GetParent()->GetRotationMatrix()));
             return GetParent()->GetPosition() + newPosition;
         }
 
@@ -148,7 +166,7 @@ namespace UltraEd
         return mat;
     }
 
-    const D3DXMATRIX Actor::GetRotationMatrix(bool worldSpace) 
+    const D3DXMATRIX Actor::GetRotationMatrix(bool worldSpace)
     {
         if (worldSpace && GetParent() != nullptr)
         {
@@ -223,8 +241,17 @@ namespace UltraEd
 
         if (actor == nullptr) return;
 
-        // Update position based off of new origin.
-        m_position = m_position - actor->GetPosition();
+        D3DXMATRIX rotationInverse;
+        D3DXMatrixInverse(&rotationInverse, NULL, &actor->GetRotationMatrix());
+        D3DXMATRIX scaleInverse;
+        D3DXMatrixInverse(&scaleInverse, NULL, &actor->GetScaleMatrix());
+
+        m_worldRot = m_worldRot * rotationInverse;
+
+        D3DXVec3TransformCoord(&m_position, &(m_position - actor->GetPosition()), &(rotationInverse * scaleInverse));
+    
+        D3DXMATRIX newScale = GetScaleMatrix() * scaleInverse;
+        D3DXVec3TransformCoord(&m_scale, &m_scale, &newScale);
 
         actor->m_children[GetId()] = this;
 

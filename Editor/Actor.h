@@ -36,7 +36,8 @@ namespace UltraEd
         bool SetPosition(const D3DXVECTOR3 &position) { return Dirty([&] { m_position = position; }, &m_position); }
         const D3DXVECTOR3 &GetEulerAngles();
         bool SetRotation(const D3DXVECTOR3 &eulerAngles);
-        const D3DXVECTOR3 &GetScale() { return m_scale; }
+        const D3DXVECTOR3 GetScale();
+        const D3DXMATRIX GetScaleMatrix(bool worldSpace = true);
         bool SetScale(const D3DXVECTOR3 &scale) { return Dirty([&] { m_scale = scale; }, &m_scale); }
         D3DXVECTOR3 GetRight();
         D3DXVECTOR3 GetForward();
