@@ -62,6 +62,26 @@ namespace UltraEd
         return strCopy;
     }
 
+    D3DXVECTOR3 Util::ToEuler(const D3DXMATRIX &rotation)
+    {
+        D3DXVECTOR3 euler;
+
+        euler.x = asinf(-rotation._32);
+
+        if (cosf(euler.x) > 0.0001f)
+        {
+            euler.y = atan2f(rotation._31, rotation._33);
+            euler.z = atan2f(rotation._12, rotation._22);
+        }
+        else
+        {
+            euler.y = 0.0f;
+            euler.z = atan2f(-rotation._21, rotation._11);
+        }
+
+        return D3DXVECTOR3(D3DXToDegree(euler.x), D3DXToDegree(euler.y), D3DXToDegree(euler.z));
+    }
+
     void Util::CopyBackBuffer(UINT width, UINT height, LPDIRECT3DDEVICE9 source, LPDIRECT3DDEVICE9 target, 
         LPDIRECT3DTEXTURE9 *texture)
     {

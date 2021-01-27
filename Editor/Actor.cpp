@@ -247,11 +247,11 @@ namespace UltraEd
         D3DXMatrixInverse(&scaleInverse, NULL, &actor->GetScaleMatrix());
 
         m_worldRot = m_worldRot * rotationInverse;
+        m_eulerAngles = Util::ToEuler(m_worldRot);
 
         D3DXVec3TransformCoord(&m_position, &(m_position - actor->GetPosition()), &(rotationInverse * scaleInverse));
     
-        D3DXMATRIX newScale = GetScaleMatrix() * scaleInverse;
-        D3DXVec3TransformCoord(&m_scale, &m_scale, &newScale);
+        D3DXVec3TransformCoord(&m_scale, &m_scale, &(GetScaleMatrix() * scaleInverse));
 
         actor->m_children[GetId()] = this;
 
@@ -262,8 +262,12 @@ namespace UltraEd
     {
         if (m_parent == nullptr) return;
 
-        // Update position based off of previous origin.
-        m_position = m_position + m_parent->GetPosition();
+        m_worldRot = m_parent->GetRotationMatrix() * m_worldRot;
+        m_eulerAngles = Util::ToEuler(m_worldRot);
+
+        D3DXVec3TransformCoord(&m_position, &GetPosition(), &(m_parent->GetRotationMatrix() * m_parent->GetScaleMatrix()));
+
+        D3DXVec3TransformCoord(&m_scale, &m_scale, &(GetScaleMatrix() * m_parent->GetScaleMatrix()));
 
         m_parent->m_children.erase(GetId());
 
