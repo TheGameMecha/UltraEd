@@ -79,7 +79,7 @@ namespace UltraEd
         }, &m_worldRot);
     }
 
-    const D3DXVECTOR3 Actor::GetScale() 
+    const D3DXVECTOR3 Actor::GetScale()
     {
         return m_scale;
     }
@@ -176,6 +176,19 @@ namespace UltraEd
         return m_worldRot;
     }
 
+    void Actor::SetRotationMatrix(const D3DXMATRIX &mat, bool worldSpace)
+    {
+        if (worldSpace)
+        {
+            m_worldRot = mat;
+            m_eulerAngles = Util::ToEuler(mat);
+        }
+        else
+        {
+            m_localRot = mat;
+        }
+    }
+
     bool Actor::Pick(const D3DXVECTOR3 &orig, const D3DXVECTOR3 &dir, float *dist)
     {
         // Test all faces in this actor.
@@ -246,11 +259,8 @@ namespace UltraEd
         D3DXMATRIX scaleInverse;
         D3DXMatrixInverse(&scaleInverse, NULL, &actor->GetScaleMatrix());
 
-        m_worldRot = m_worldRot * rotationInverse;
-        m_eulerAngles = Util::ToEuler(m_worldRot);
-
+        SetRotationMatrix(m_worldRot * rotationInverse);
         D3DXVec3TransformCoord(&m_position, &(m_position - actor->GetPosition()), &(rotationInverse * scaleInverse));
-    
         D3DXVec3TransformCoord(&m_scale, &m_scale, &(GetScaleMatrix() * scaleInverse));
 
         actor->m_children[GetId()] = this;
@@ -262,11 +272,8 @@ namespace UltraEd
     {
         if (m_parent == nullptr) return;
 
-        m_worldRot = m_parent->GetRotationMatrix() * m_worldRot;
-        m_eulerAngles = Util::ToEuler(m_worldRot);
-
-        D3DXVec3TransformCoord(&m_position, &GetPosition(), &(m_parent->GetRotationMatrix() * m_parent->GetScaleMatrix()));
-
+        SetRotationMatrix(m_worldRot * m_parent->GetRotationMatrix());
+        SetPosition(GetPosition());
         D3DXVec3TransformCoord(&m_scale, &m_scale, &(GetScaleMatrix() * m_parent->GetScaleMatrix()));
 
         m_parent->m_children.erase(GetId());

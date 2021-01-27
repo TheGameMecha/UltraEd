@@ -195,7 +195,7 @@ namespace UltraEd
             // Keep gizmo in-sync with the actor's rotation.
             for (int i = 0; i < GIZMO_COUNT; i++)
             {
-                m_models[i].SetLocalRotationMatrix(mat);
+                m_models[i].SetRotationMatrix(mat, false);
             }
 
             SetPosition(currentActor->GetPosition());

@@ -28,7 +28,7 @@ namespace UltraEd
         const ActorType &GetType() { return m_type; }
         D3DXMATRIX GetMatrix();
         const D3DXMATRIX GetRotationMatrix(bool worldSpace = true);
-        void SetLocalRotationMatrix(const D3DXMATRIX &mat) { m_localRot = mat; }
+        void SetRotationMatrix(const D3DXMATRIX &mat, bool worldSpace = true);
         bool Move(const D3DXVECTOR3 &position) { return Dirty([&] { m_position += position; }, &m_position); }
         bool Scale(const D3DXVECTOR3 &position) { return Dirty([&] { m_scale += position; }, &m_scale); }
         bool Rotate(const float &angle, const D3DXVECTOR3 &dir);
