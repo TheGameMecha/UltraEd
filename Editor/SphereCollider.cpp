@@ -51,7 +51,8 @@ namespace UltraEd
         D3DXVECTOR3 min, max;
         DistantAABBPoints(min, max, vertices);
         center = (min + max) * 0.5f;
-        radius = sqrtf(D3DXVec3Dot(&(max - center), &(max - center)));
+        D3DXVECTOR3 distToEdge = (max - center);
+        radius = sqrtf(D3DXVec3Dot(&distToEdge, &distToEdge));
     }
 
     void SphereCollider::AdjustSphere(D3DXVECTOR3 &center, FLOAT &radius, const Vertex &vertex)

@@ -57,10 +57,15 @@ namespace UltraEd
         auto largestExtent = *std::max_element(extentsList.begin(), extentsList.end());     
      
         D3DXMATRIX viewMat;
+
+        D3DXVECTOR3 lookX = D3DXVECTOR3(center.x, center.y, center.z - (2 * largestExtent));
+        D3DXVECTOR3 lookY = D3DXVECTOR3(0, center.y, 0);
+        D3DXVECTOR3 lookZ = D3DXVECTOR3(0, 1, 0);
+
         D3DXMatrixLookAtLH(&viewMat, 
-            &D3DXVECTOR3(center.x, center.y, center.z - (2 * largestExtent)),
-            &D3DXVECTOR3(0, center.y, 0),
-            &D3DXVECTOR3(0, 1, 0));
+            &lookX,
+            &lookY,
+            &lookZ);
         m_renderDevice.GetDevice()->SetTransform(D3DTS_VIEW, &viewMat);
 
         D3DXMATRIX projMat;

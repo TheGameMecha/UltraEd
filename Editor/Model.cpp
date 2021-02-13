@@ -32,7 +32,8 @@ namespace UltraEd
         if (buffer != NULL)
         {
             stack->Push();
-            stack->MultMatrixLocal(&GetMatrix());
+            D3DXMATRIX matrix = GetMatrix();
+            stack->MultMatrixLocal(&matrix);
 
             if (m_texture->IsLoaded()) device->SetTexture(0, m_texture->Get());
 

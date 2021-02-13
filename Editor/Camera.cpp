@@ -23,7 +23,8 @@ namespace UltraEd
         if (buffer != NULL)
         {
             stack->Push();
-            stack->MultMatrixLocal(&GetMatrix());
+            D3DXMATRIX matrix = GetMatrix();
+            stack->MultMatrixLocal(&matrix);
 
             device->SetTransform(D3DTS_WORLD, stack->GetTop());
             device->SetStreamSource(0, buffer, 0, sizeof(Vertex));
